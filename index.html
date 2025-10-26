@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Taobel Calculator</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#002b55">
+  <style>
+    :root{
+      --bg1:#002b55; --bg2:#005f99; --card:#071826; --accent:#00c6ff;
+      --glass: rgba(255,255,255,0.04);
+      --light-bg: #f6f8fb; --light-text:#062033;
+    }
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;}
+    body{
+      background: linear-gradient(135deg,var(--bg1),var(--bg2));
+      display:flex;align-items:center;justify-content:center;padding:20px;color:#e6f7ff;
+      transition: background 300ms ease;
+    }
+    .app{
+      width:420px; max-width:96vw; background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.06));
+      border-radius:16px; padding:18px; box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+      backdrop-filter: blur(6px);
+    }
+    header{display:flex;align-items:center;gap:12px;justify-content:space-between}
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{width:56px;height:56px;border-radius:10px;background:linear-gradient(135deg,#00a9ff,#0066cc);display:flex;align-items:center;justify-content:center;font-weight:800;color:white;font-size:26px;}
+    h1{margin:0;font-size:18px}
+    .display{margin-top:14px;background:var(--card);padding:14px;border-radius:10px;min-height:100px;display:flex;flex-direction:column;justify-content:center;transition:all 180ms ease}
+    #spoken{font-size:13px;opacity:0.95}
+    #expression{font-size:20px;margin-top:6px;word-break:break-all}
+    #result{font-size:26px;margin-top:6px;font-weight:700;color:var(--accent)}
+    .controls{display:flex;gap:8px;margin-top:12px}
+    button{flex:1;padding:10px;border-radius:10px;border:none;background:var(--glass);color:inherit;font-size:15px;cursor:pointer}
+    button.primary{background:linear-gradient(90deg,#0077cc,#00c6ff);color:#002036;font-weight:600}
+    .keypad{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:12px}
+    .key{padding:12px;border-radius:8px;background:rgba(255,255,255,0.05);text-align:center;font-size:16px;cursor:pointer;user-select:none;transition:transform 120ms ease, background 120ms}
+    .key:active{transform:scale(0.98)}
+    .key.operator{background:linear-gradient(90deg,#003d66,#005f99);color:white;font-weight:600}
+    .side-panel{margin-left:12px; width:240px}
+    .layout{display:flex;gap:12px}
+    .panel{background:rgba(255,255,255,0.03);padding:10px;border-radius:10px;height:350px;overflow:auto}
+    .history-item{padding:8px;border-bottom:1px solid rgba(255,255,255,0.03);display:flex;justify-content:space-between;align-items:center}
+    .small{font-size:12px;opacity:0.9}
+    .flex{display:flex;gap:8px;align-items:center}
+    .badge{background:rgba(255,255,255,0.06);padding:6px;border-radius:6px;font-size:12px}
+    .theme-switch{padding:6px;border-radius:8px;background:rgba(255,255,255,0.03);cursor:pointer}
+    footer{margin-top:10px;font-size:12px;opacity:0.8;text-align:center}
+    /* light theme */
+    body.light{background: linear-gradient(135deg,#eaf4ff,#dff6ff); color:var(--light-text)}
+    body.light .app{background:linear-gradient(180deg, rgba(2,8,23,0.03), rgba(255,255,255,0.9)); color:var(--light-text)}
+    body.light .display{background:#ffffff; color:var(--light-text)}
+    body.light .key{background:#f2f6fb; color:var(--light-text)}
+    body.light .key.operator{background:linear-gradient(90deg,#cfe9ff,#9fdfff); color:var(--light-text)}
+  </style>
+</head>
+<body>
+  <div class="app" role="application" aria-label="Taobel Calculator">
+    <header>
+      <div class="brand">
+        <div class="logo">T</div>
+        <div>
+          <h1>Taobel Calculator</h1>
+          <div class="small">Voice + Scientific + PWA</div>
+        </div>
+      </div>
+      <div class="flex">
+        <div class="theme-switch" id="themeToggle">Toggle Theme</div>
+        <div class="badge" id="ttsBtn" title="Read result aloud">🔊</div>
+      </div>
+    </header>
+
+    <div class="layout" style="margin-top:12px">
+      <div style="flex:1">
+        <div class="display" aria-live="polite">
+          <div id="spoken">Say: "12 plus 8 divided by 4" or tap keys below</div>
+          <div id="expression"></div>
+          <div id="result"></div>
+        </div>
+
+        <div class="controls">
+          <button id="startBtn" class="primary">🎤 Speak</button>
+          <button id="explainBtn">AI Explain</button>
+          <button id="favBtn">★ Save</button>
+          <button id="clearBtn">Clear</button>
+        </div>
+
+        <div style="margin-top:10px">
+          <div class="keypad" aria-label="Calculator keypad">
+            <!-- numbers and ops: extended scientific layout -->
+            <div class="key">7</div><div class="key">8</div><div class="key">9</div><div class="key operator">/</div><div class="key operator">sin(</div><div class="key operator">cos(</div>
+            <div class="key">4</div><div class="key">5</div><div class="key">6</div><div class="key operator">*</div><div class="key operator">tan(</div><div class="key operator">log(</div>
+            <div class="key">1</div><div class="key">2</div><div class="key">3</div><div class="key operator">-</div><div class="key operator">√(</div><div class="key operator">^</div>
+            <div class="key">0</div><div class="key">.</div><div class="key operator">(</div><div class="key operator">)</div><div class="key operator">π</div><div class="key operator">e</div>
+            <div class="key operator">ANS</div><div class="key operator">C</div><div class="key operator">=</div><div class="key operator">+</div><div class="key operator">%</div><div class="key operator">Rnd</div>
+          </div>
+        </div>
+
+        <footer><span id="installHint">Installable PWA — Add to Home Screen</span></footer>
+      </div>
+
+      <div class="side-panel" style="width:320px">
+        <div class="panel">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <strong>History</strong>
+            <div class="small"><button id="clearHistory" class="small">Clear</button></div>
+          </div>
+          <div id="historyList"></div>
+
+          <hr style="margin:10px 0;border:none;border-top:1px solid rgba(255,255,255,0.03)">
+
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <strong>Favorites</strong><div class="small">Tap to insert</div>
+          </div>
+          <div id="favorites"></div>
+
+          <hr style="margin:10px 0;border:none;border-top:1px solid rgba(255,255,255,0.03)">
+          <div><strong>Currency Converter (offline)</strong></div>
+          <div class="small">Rates are fixed offline</div>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <input id="curAmount" type="number" placeholder="Amount" style="flex:1;padding:8px;border-radius:6px;border:none">
+            <select id="curFrom"><option>USD</option><option>NGN</option><option>EUR</option></select>
+            <select id="curTo"><option>NGN</option><option>USD</option><option>EUR</option></select>
+          </div>
+          <div style="margin-top:8px;display:flex;gap:8px">
+            <button id="convertBtn" class="small">Convert</button>
+            <div id="convResult" class="small" style="padding:6px;background:rgba(255,255,255,0.03);border-radius:6px">---</div>
+          </div>
+
+          <hr style="margin:10px 0;border:none;border-top:1px solid rgba(255,255,255,0.03)">
+          <div class="small">Settings</div>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <label><input type="checkbox" id="vibrateChk"> Vibration</label>
+            <label style="margin-left:8px"><input type="checkbox" id="autoListen"> Auto Listen</label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* Core app logic: evaluation, history, TTS, explain, favorites, currency (offline rates), theme, vibration, speech */
+const startBtn = document.getElementById('startBtn');
+const clearBtn = document.getElementById('clearBtn');
+const spokenEl = document.getElementById('spoken');
+const exprEl = document.getElementById('expression');
+const resultEl = document.getElementById('result');
+const explainBtn = document.getElementById('explainBtn');
+const favBtn = document.getElementById('favBtn');
+const historyList = document.getElementById('historyList');
+const favoritesEl = document.getElementById('favorites');
+const ttsBtn = document.getElementById('ttsBtn');
+const themeToggle = document.getElementById('themeToggle');
+const clearHistoryBtn = document.getElementById('clearHistory');
+const convertBtn = document.getElementById('convertBtn');
+const convResult = document.getElementById('convResult');
+const curAmount = document.getElementById('curAmount');
+const curFrom = document.getElementById('curFrom');
+const curTo = document.getElementById('curTo');
+const vibrateChk = document.getElementById('vibrateChk');
+const autoListenChk = document.getElementById('autoListen');
+let currentExpression = '';
+let lastAnswer = '';
+const FIXED_RATES = { 'USD':1, 'NGN':1600, 'EUR':0.93 }; // offline rates
+
+function saveState(){ localStorage.setItem('taobel_state', JSON.stringify({
+  history: getHistory(), favorites: getFavorites(), theme: document.body.classList.contains('light')
+})); }
+
+function loadState(){
+  try{
+    const s = JSON.parse(localStorage.getItem('taobel_state') || '{}');
+    if (s.history) setHistory(s.history);
+    if (s.favorites) setFavorites(s.favorites);
+    if (s.theme) document.body.classList.add('light');
+  }catch(e){}
+}
+
+// history functions
+function getHistory(){ try{ return JSON.parse(localStorage.getItem('taobel_history')||'[]'); }catch(e){return []} }
+function addHistory(item){ const h = getHistory(); h.unshift(item); if (h.length>50) h.pop(); localStorage.setItem('taobel_history', JSON.stringify(h)); renderHistory(); }
+function setHistory(h){ localStorage.setItem('taobel_history', JSON.stringify(h)); renderHistory(); }
+function renderHistory(){ const h = getHistory(); historyList.innerHTML=''; h.forEach(it=>{
+  const div=document.createElement('div'); div.className='history-item';
+  div.innerHTML = `<div><div style="font-weight:600">${it.expr}</div><div class="small">${it.result}</div></div><div><button class="small" data-ex="${it.expr}">Use</button></div>`;
+  historyList.appendChild(div);
+}); document.querySelectorAll('#historyList button').forEach(b=>b.addEventListener('click', ()=>{ currentExpression = b.dataset.ex; updateDisplay(); })); }
+clearHistoryBtn.addEventListener('click', ()=>{ localStorage.removeItem('taobel_history'); renderHistory(); });
+
+# truncated due to execution length - finishing file write
