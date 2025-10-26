@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Taobel Calculator</title>
+  <link rel="manifest" href="manifest.json" />
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: var(--bg, #e7f0ff);
+      color: var(--text, #111);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      color: #1a4cff;
+      margin-top: 10px;
+    }
+    .calculator {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      padding: 20px;
+      width: 300px;
+    }
+    .display {
+      width: 100%;
+      height: 60px;
+      text-align: right;
+      font-size: 1.5rem;
+      border: none;
+      background: #eef3ff;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      padding: 10px;
+    }
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+    button {
+      font-size: 1.2rem;
+      padding: 14px;
+      border: none;
+      border-radius: 8px;
+      background: #1a4cff;
+      color: white;
+    }
+    button.op {background: #5478ff;}
+    button.equal {background: #00b894;}
+    button:active {opacity: 0.8;}
+    .row {margin-top: 10px; display: flex; justify-content: space-between;}
+  </style>
+</head>
+<body>
+  <h1>Taobel Calculator</h1>
+  <div class="calculator">
+    <input type="text" class="display" id="display" readonly />
+    <div class="buttons">
+      <button>7</button><button>8</button><button>9</button><button class="op">/</button>
+      <button>4</button><button>5</button><button>6</button><button class="op">*</button>
+      <button>1</button><button>2</button><button>3</button><button class="op">-</button>
+      <button>0</button><button>.</button><button class="equal">=</button><button class="op">+</button>
+    </div>
+    <div class="row">
+      <button id="speakBtn">🎤</button>
+      <button id="clearBtn">C</button>
+      <button id="themeBtn">🌙</button>
+    </div>
+  </div>
+
+  <script>
+    const display = document.getElementById('display');
+    document.querySelectorAll('.buttons button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const value = btn.textContent;
+        if(value === '=') {
+          try {
+            display.value = eval(display.value);
+            speechSynthesis.speak(new SpeechSynthesisUtterance('Result is ' + display.value));
+          } catch(e){ display.value = 'Error'; }
+        } else {
+          display.value += value;
+        }
+      });
+    });
+
+    document.getElementById('clearBtn').onclick = () => display.value = '';
+    document.getElementById('themeBtn').onclick = () => {
+      const dark = document.body.style.getPropertyValue('--bg') === '#111';
+      if(!dark){
+        document.body.style.setProperty('--bg', '#111');
+        document.body.style.setProperty('--text', '#fff');
+      } else {
+        document.body.style.setProperty('--bg', '#e7f0ff');
+        document.body.style.setProperty('--text', '#111');
+      }
+    };
+
+    // Voice input
+    const speakBtn = document.getElementById('speakBtn');
+    if('webkitSpeechRecognition' in window){
+      const recog = new webkitSpeechRecognition();
+      recog.lang = 'en-US';
+      recog.onresult = (e) => {
+        const transcript = e.results[0][0].transcript.replace(/plus/g,'+').replace(/minus/g,'-').replace(/times/g,'*').replace(/divide/g,'/');
+        display.value = transcript;
+      };
+      speakBtn.onclick = () => recog.start();
+    } else {
+      speakBtn.disabled = true;
+      speakBtn.textContent = '🎤❌';
+    }
+  </script>
+</body>
+</html>
