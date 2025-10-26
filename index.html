@@ -1,123 +1,166 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Taobel Calculator</title>
-  <link rel="manifest" href="manifest.json" />
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#002b55">
   <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: var(--bg, #e7f0ff);
-      color: var(--text, #111);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      height: 100vh;
-      margin: 0;
-      padding: 20px;
+    :root{
+      --bg1:#002b55; --bg2:#005f99; --card:#071826; --accent:#00c6ff;
+      --glass: rgba(255,255,255,0.04);
     }
-    h1 {
-      color: #1a4cff;
-      margin-top: 10px;
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;}
+    body{
+      background: linear-gradient(135deg,var(--bg1),var(--bg2));
+      display:flex;align-items:center;justify-content:center;padding:20px;color:#e6f7ff;
     }
-    .calculator {
-      background: white;
-      border-radius: 16px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      padding: 20px;
-      width: 300px;
+    .app{
+      width:360px; max-width:95vw; background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.06));
+      border-radius:16px; padding:18px; box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+      backdrop-filter: blur(6px);
     }
-    .display {
-      width: 100%;
-      height: 60px;
-      text-align: right;
-      font-size: 1.5rem;
-      border: none;
-      background: #eef3ff;
-      margin-bottom: 10px;
-      border-radius: 8px;
-      padding: 10px;
-    }
-    .buttons {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
-    }
-    button {
-      font-size: 1.2rem;
-      padding: 14px;
-      border: none;
-      border-radius: 8px;
-      background: #1a4cff;
-      color: white;
-    }
-    button.op {background: #5478ff;}
-    button.equal {background: #00b894;}
-    button:active {opacity: 0.8;}
-    .row {margin-top: 10px; display: flex; justify-content: space-between;}
+    header{display:flex;align-items:center;gap:12px;}
+    .logo{width:52px;height:52px;border-radius:10px;background:linear-gradient(135deg,#00a9ff,#0066cc);display:flex;align-items:center;justify-content:center;font-weight:700;color:white;font-size:22px;}
+    h1{margin:0;font-size:18px}
+    .display{margin-top:14px;background:var(--card);padding:14px;border-radius:10px;min-height:84px;display:flex;flex-direction:column;justify-content:center}
+    #spoken{font-size:13px;opacity:0.9}
+    #expression{font-size:20px;margin-top:6px;word-break:break-all}
+    #result{font-size:26px;margin-top:6px;font-weight:700;color:var(--accent)}
+    .controls{display:flex;gap:8px;margin-top:12px}
+    button{flex:1;padding:10px;border-radius:10px;border:none;background:var(--glass);color:inherit;font-size:15px;cursor:pointer}
+    button.primary{background:linear-gradient(90deg,#0077cc,#00c6ff);color:#002036;font-weight:600}
+    .keypad{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
+    .key{padding:14px;border-radius:8px;background:rgba(255,255,255,0.05);text-align:center;font-size:18px;cursor:pointer;user-select:none}
+    .key.operator{background:linear-gradient(90deg,#003d66,#005f99);color:white;font-weight:600}
+    footer{margin-top:10px;font-size:12px;opacity:0.8;text-align:center}
   </style>
 </head>
 <body>
-  <h1>Taobel Calculator</h1>
-  <div class="calculator">
-    <input type="text" class="display" id="display" readonly />
-    <div class="buttons">
-      <button>7</button><button>8</button><button>9</button><button class="op">/</button>
-      <button>4</button><button>5</button><button>6</button><button class="op">*</button>
-      <button>1</button><button>2</button><button>3</button><button class="op">-</button>
-      <button>0</button><button>.</button><button class="equal">=</button><button class="op">+</button>
+  <div class="app" role="application" aria-label="Taobel Calculator">
+    <header>
+      <div class="logo">T</div>
+      <div>
+        <h1>Taobel Calculator</h1>
+        <div style="font-size:12px;opacity:0.9">Voice + Touch calculator (PWA)</div>
+      </div>
+    </header>
+
+    <div class="display" aria-live="polite">
+      <div id="spoken">Say: "12 plus 8 divided by 4" or tap keys below</div>
+      <div id="expression"></div>
+      <div id="result"></div>
     </div>
-    <div class="row">
-      <button id="speakBtn">🎤</button>
-      <button id="clearBtn">C</button>
-      <button id="themeBtn">🌙</button>
+
+    <div class="controls">
+      <button id="startBtn" class="primary">🎤 Speak</button>
+      <button id="clearBtn">Clear</button>
     </div>
+
+    <div class="keypad" role="group" aria-label="Calculator keypad">
+      <div class="key">7</div><div class="key">8</div><div class="key">9</div><div class="key operator">/</div>
+      <div class="key">4</div><div class="key">5</div><div class="key">6</div><div class="key operator">*</div>
+      <div class="key">1</div><div class="key">2</div><div class="key">3</div><div class="key operator">-</div>
+      <div class="key">0</div><div class="key">.</div><div class="key operator">=</div><div class="key operator">+</div>
+    </div>
+
+    <footer>Installable PWA — Add to Home Screen</footer>
   </div>
 
-  <script>
-    const display = document.getElementById('display');
-    document.querySelectorAll('.buttons button').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const value = btn.textContent;
-        if(value === '=') {
-          try {
-            display.value = eval(display.value);
-            speechSynthesis.speak(new SpeechSynthesisUtterance('Result is ' + display.value));
-          } catch(e){ display.value = 'Error'; }
-        } else {
-          display.value += value;
-        }
-      });
-    });
+<script>
+/* Speech recognition with fallback */
+const startBtn = document.getElementById('startBtn');
+const clearBtn = document.getElementById('clearBtn');
+const spokenEl = document.getElementById('spoken');
+const exprEl = document.getElementById('expression');
+const resultEl = document.getElementById('result');
 
-    document.getElementById('clearBtn').onclick = () => display.value = '';
-    document.getElementById('themeBtn').onclick = () => {
-      const dark = document.body.style.getPropertyValue('--bg') === '#111';
-      if(!dark){
-        document.body.style.setProperty('--bg', '#111');
-        document.body.style.setProperty('--text', '#fff');
-      } else {
-        document.body.style.setProperty('--bg', '#e7f0ff');
-        document.body.style.setProperty('--text', '#111');
-      }
-    };
+let currentExpression = '';
 
-    // Voice input
-    const speakBtn = document.getElementById('speakBtn');
-    if('webkitSpeechRecognition' in window){
-      const recog = new webkitSpeechRecognition();
-      recog.lang = 'en-US';
-      recog.onresult = (e) => {
-        const transcript = e.results[0][0].transcript.replace(/plus/g,'+').replace(/minus/g,'-').replace(/times/g,'*').replace(/divide/g,'/');
-        display.value = transcript;
-      };
-      speakBtn.onclick = () => recog.start();
-    } else {
-      speakBtn.disabled = true;
-      speakBtn.textContent = '🎤❌';
+function updateDisplay(){
+  exprEl.textContent = currentExpression;
+  try {
+    const res = eval(currentExpression || '0');
+    if (res !== undefined) resultEl.textContent = res;
+  } catch(e){
+    resultEl.textContent = '';
+  }
+}
+
+clearBtn.addEventListener('click', ()=>{
+  currentExpression = '';
+  spokenEl.textContent = 'Cleared. You can speak or tap keys.';
+  updateDisplay();
+});
+
+document.querySelectorAll('.key').forEach(k=>{
+  k.addEventListener('click', ()=> {
+    const v = k.textContent.trim();
+    if (v === '=') {
+      // do nothing special, eval shown already
+      spokenEl.textContent = 'Calculated by touchscreen';
+      try{ currentExpression = String(eval(currentExpression)); }catch(e){}
+      updateDisplay();
+      return;
     }
-  </script>
+    currentExpression += v;
+    updateDisplay();
+  });
+});
+
+// Speech recognition
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+function normalizeSpokenToExpr(text){
+  return text.toLowerCase()
+    .replace(/plus/g,'+')
+    .replace(/minus/g,'-')
+    .replace(/times|x|multiplied by/g,'*')
+    .replace(/divided by|over/g,'/')
+    .replace(/into/g,'*')
+    .replace(/by/g,'/')
+    .replace(/[^0-9+\-*/(). ]/g,'') // remove stray words
+    ;
+}
+
+if (!SpeechRecognition) {
+  startBtn.disabled = true;
+  startBtn.textContent = 'Speech not supported';
+} else {
+  const recognition = new SpeechRecognition();
+  recognition.lang = 'en-US';
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+
+  startBtn.addEventListener('click', ()=> {
+    recognition.start();
+    startBtn.textContent = 'Listening...';
+  });
+
+  recognition.addEventListener('result', (ev)=>{
+    const text = ev.results[0][0].transcript;
+    spokenEl.textContent = 'You said: "' + text + '"';
+    const expr = normalizeSpokenToExpr(text);
+    currentExpression = expr;
+    updateDisplay();
+  });
+
+  recognition.addEventListener('end', ()=>{
+    startBtn.textContent = '🎤 Speak';
+  });
+
+  recognition.addEventListener('error', (e)=>{
+    spokenEl.textContent = 'Speech error: ' + e.error;
+    startBtn.textContent = '🎤 Speak';
+  });
+}
+
+// PWA service worker registration (will be cached)
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('service-worker.js')
+    .then(()=>console.log('Service worker registered'))
+    .catch(()=>console.log('Service worker failed'));
+}
+</script>
 </body>
 </html>
