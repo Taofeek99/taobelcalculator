@@ -1,14 +1,11 @@
-# Taobel Calculator v1.1 (Scientific Edition)
+# Taobel Calculator v1.2 (Scientific, Voice, Blue Glow)
 
-Taobel Calculator v1.1 — Standard + Scientific modes with voice input and TTS.
+Taobel Calculator v1.2 — Scientific functions fixed (sqrt, log, ln, sin, cos, tan), voice input and TTS, blue glow theme, PWA-ready.
 
-## Features
-- Standard calculator UI
-- Toggleable Scientific Mode (sin, cos, tan, log, ln, sqrt, ^, π, e)
-- Voice input (SpeechRecognition) maps phrases to math expressions
-- Text-to-speech to read results
-- Service worker for offline caching
-- Ready for GitHub Pages (place files at repo root)
+## How to deploy
+Upload files to your GitHub repo root and enable Pages (main branch, root).
 
-## Deploy
-Upload the files in this package to your repository root and enable GitHub Pages (branch: main, folder: / (root)).
+## Notes
+- Voice works in Chrome and browsers supporting SpeechRecognition.
+- If old cached version appears, clear site data or unregister service worker in browser.
+- This build intentionally omits currency converter for focus and performance.

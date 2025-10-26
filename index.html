@@ -8,46 +8,32 @@
   <meta name="theme-color" content="#002b55">
   <style>
     :root{
-      --bg1:#002b55; --bg2:#005f99;
-      --card: rgba(255,255,255,0.04);
-      --accent: #00c6ff;
-      --text: #e6f7ff;
+      --bg1:#001936; --bg2:#003a6b; --card: rgba(255,255,255,0.04);
+      --accent: #39d0ff; --text:#e8f9ff;
     }
     html,body{height:100%;margin:0;font-family:Inter,system-ui,Arial;}
     body{
-      background: linear-gradient(135deg,var(--bg1),var(--bg2));
+      background: radial-gradient(1200px 600px at 10% 10%, rgba(57,208,255,0.06), transparent),
+                  linear-gradient(135deg,var(--bg1),var(--bg2));
       color:var(--text);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:18px;
+      display:flex;align-items:center;justify-content:center;padding:20px;
     }
-    .app{
-      width:360px; max-width:96vw;
-      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.05));
-      border-radius:12px; padding:14px; box-shadow:0 12px 30px rgba(0,0,0,0.35);
-    }
+    .app{width:380px;max-width:96vw;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(0,0,0,0.06));
+         border-radius:14px;padding:16px;box-shadow:0 12px 30px rgba(2,8,23,0.6);backdrop-filter:blur(6px)}
     header{display:flex;justify-content:space-between;align-items:center}
-    header h1{margin:0;font-size:18px}
-    .display{background:#071a2a;border-radius:10px;padding:12px;margin-top:12px;min-height:64px}
+    h1{margin:0;font-size:18px}
+    .display{background:#071a2a;border-radius:10px;padding:12px;margin-top:12px;min-height:68px}
     #expr{font-size:18px;color:#cfeefd;word-break:break-all}
-    #res{font-size:24px;color:var(--accent);font-weight:700;margin-top:6px}
+    #res{font-size:26px;color:var(--accent);font-weight:700;margin-top:6px}
     .controls{display:flex;gap:8px;margin-top:12px}
     .controls button{flex:1;padding:10px;border-radius:8px;border:none;background:var(--card);color:var(--text);cursor:pointer}
-    .controls button.primary{background:linear-gradient(90deg,#0077cc,#00c6ff);color:#012032;font-weight:600}
+    .controls button.primary{background:linear-gradient(90deg,#0077cc,#00c6ff);color:#012032;font-weight:600;box-shadow:0 6px 18px rgba(0,198,255,0.12)}
     .keys{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
-    .key{padding:12px;border-radius:8px;background:rgba(255,255,255,0.03);text-align:center;cursor:pointer;user-select:none}
-    .key.op{background:linear-gradient(90deg,#003d66,#005f99);font-weight:600}
-    .row{display:flex;gap:8px;margin-top:10px}
+    .key{padding:12px;border-radius:8px;background:rgba(255,255,255,0.03);text-align:center;cursor:pointer;user-select:none;box-shadow:inset 0 -2px 0 rgba(0,0,0,0.1)}
+    .key.op{background:linear-gradient(90deg,#003d66,#005f99);font-weight:600;color:white}
     .sci-panel{display:none;margin-top:12px;grid-template-columns:repeat(4,1fr);gap:8px}
-    .small{font-size:12px;opacity:0.9}
-    footer{margin-top:10px;font-size:12px;color:#cfeefd;text-align:center}
-    /* light theme styles (toggle via body.light) */
-    body.light{background:linear-gradient(135deg,#eaf4ff,#dff6ff);color:#062033}
-    body.light .app{background:#fff;color:#062033}
-    body.light .display{background:#fff;color:#062033}
-    body.light .key{background:#f3f8ff;color:#062033}
-    body.light .key.op{background:linear-gradient(90deg,#cfe9ff,#9fdfff);color:#062033}
+    footer{margin-top:12px;font-size:12px;color:#cfeefd;text-align:center}
+    .small{font-size:12px;opacity:0.95}
   </style>
 </head>
 <body>
@@ -55,7 +41,7 @@
     <header>
       <div>
         <h1>Taobel Calculator</h1>
-        <div class="small">Standard / Scientific • Voice-enabled</div>
+        <div class="small">Standard • Scientific (toggle)</div>
       </div>
       <div class="small">Taobel</div>
     </header>
@@ -85,145 +71,95 @@
       <div class="key op">e</div><div class="key op">x²</div><div class="key op">x³</div><div class="key op">%</div>
     </div>
 
-    <footer>Offline • Blue theme • Taobel</footer>
+    <footer>Offline • Blue Glow • Taobel</footer>
   </div>
 
-  <!-- Scripts placed at end so DOM exists before handlers attach -->
-  <script>
-  (function(){
-    const exprEl = document.getElementById('expr');
-    const resEl  = document.getElementById('res');
-    const keysContainer = document.getElementById('keys');
-    const sciPanel = document.getElementById('sciPanel');
-    const btnSpeak = document.getElementById('btnSpeak');
-    const btnToggleSci = document.getElementById('btnToggleSci');
-    const btnTTS = document.getElementById('btnTTS');
-    const btnClear = document.getElementById('btnClear');
+<script>
+(function(){
+  const exprEl = document.getElementById('expr');
+  const resEl  = document.getElementById('res');
+  const sciPanel = document.getElementById('sciPanel');
+  const btnSpeak = document.getElementById('btnSpeak');
+  const btnToggleSci = document.getElementById('btnToggleSci');
+  const btnTTS = document.getElementById('btnTTS');
+  const btnClear = document.getElementById('btnClear');
 
-    let expr = '';
-    let lastAnswer = '';
+  let expr = '';
+  let lastAnswer = '';
 
-    // Helpers
-    function setExpr(v){ expr = v; exprEl.textContent = expr || '0'; updateResult(); }
-    function appendToken(t){ if(expr==='0') expr = t; else expr += t; exprEl.textContent = expr; updateResult(); }
-    function clearAll(){ expr=''; setExpr(''); resEl.textContent=''; lastAnswer=''; }
+  function setExpr(v){ expr = v; exprEl.textContent = expr || '0'; updateResult(); }
+  function appendToken(t){ if(expr==='0') expr = t; else expr += t; exprEl.textContent = expr; updateResult(); }
+  function clearAll(){ expr=''; setExpr(''); resEl.textContent=''; lastAnswer=''; }
 
-    // Safe evaluator
-    function safeEval(s){
-      if(!s || s.trim()==='') return null;
-      try{
-        // map math tokens
-        let t = s.replace(/π/g, String(Math.PI)).replace(/e/g, String(Math.E));
-        t = t.replace(/sqrt\(/g, 'Math.sqrt(');
-        t = t.replace(/\bln\(/g, 'Math.log(');                // natural log
-        t = t.replace(/\blog\(/g, 'Math.log10(');             // log base 10
-        t = t.replace(/\bsin\(/g, 'Math.sin(').replace(/\bcos\(/g,'Math.cos(').replace(/\btan\(/g,'Math.tan(');
-        // x², x³ -> Math.pow handling when used like '3x²' or '(... )x²'
-        t = t.replace(/(\d+|\))x²/g, function(m){ return m.replace('x²','**2'); });
-        t = t.replace(/(\d+|\))x³/g, function(m){ return m.replace('x³','**3'); });
-        // caret to exponent
-        t = t.replace(/\^/g, '**');
-        // percent: '50%' => (50/100)
-        t = t.replace(/(\d+(\.\d+)?)%/g, '($1/100)');
-        // remove any characters except allowed
-        t = t.replace(/[^0-9+\-*/().,%Mathpinegslctanobxr**]/g,'');
-        // evaluate with Function (safer than eval)
-        const fn = new Function('return ('+t+')');
-        const v = fn();
-        if(typeof v === 'number' && isFinite(v)){
-          // round small floating errors
-          return Math.round((v + Number.EPSILON) * 1e12) / 1e12;
-        }
-        return null;
-      }catch(e){
-        return null;
+  function safeEval(s){
+    if(!s || s.trim()==='') return null;
+    try{
+      let t = String(s)
+        .replace(/π/g, String(Math.PI))
+        .replace(/\be\b/g, String(Math.E));
+      t = t.replace(/sqrt\(/g, 'Math.sqrt(')
+           .replace(/\bln\(/g, 'Math.log(')
+           .replace(/\blog\(/g, 'Math.log10(')
+           .replace(/\bsin\(/g, 'Math.sin(').replace(/\bcos\(/g,'Math.cos(').replace(/\btan\(/g,'Math.tan(');
+      t = t.replace(/(\d+|\))x²/g, function(m){ return m.replace('x²','**2'); });
+      t = t.replace(/(\d+|\))x³/g, function(m){ return m.replace('x³','**3'); });
+      t = t.replace(/\^/g, '**');
+      t = t.replace(/(\d+(?:\.\d+)?)%/g, '($1/100)');
+      t = t.replace(/[^0-9+\-*/().,%Mathpinegslctanobxr**\s]/g, '');
+      const fn = new Function('return ('+t+')');
+      const v = fn();
+      if(typeof v === 'number' && isFinite(v)){
+        return Math.round((v + Number.EPSILON) * 1e12) / 1e12;
       }
-    }
+      return null;
+    }catch(e){ return null; }
+  }
 
-    function updateResult(){
-      const v = safeEval(expr);
-      if(v !== null && v !== undefined){
-        resEl.textContent = v;
-        lastAnswer = String(v);
-      } else {
-        resEl.textContent = '';
-      }
-    }
+  function updateResult(){
+    const v = safeEval(expr);
+    if(v !== null && v !== undefined){ resEl.textContent = v; lastAnswer = String(v); } else resEl.textContent = '';
+  }
 
-    // Attach key handlers (works because DOM loaded)
-    document.querySelectorAll('.key').forEach(k=>{
-      k.addEventListener('click', ()=>{
-        const txt = k.textContent.trim();
-        if(txt === '='){
-          const v = safeEval(expr);
-          if(v !== null){ expr = String(v); exprEl.textContent = expr; resEl.textContent = v; lastAnswer = String(v); }
-          return;
-        }
-        if(txt === 'C'){ clearAll(); return; }
-        // allow ANS token insertion from future (not shown here)
-        appendToken(txt);
-      });
+  // key handlers
+  document.querySelectorAll('.key').forEach(k=>{
+    k.addEventListener('click', ()=>{
+      const txt = k.textContent.trim();
+      if(txt === '='){ const v = safeEval(expr); if(v!==null){ expr = String(v); exprEl.textContent = expr; resEl.textContent = v; lastAnswer = String(v);} return; }
+      if(txt === 'C'){ clearAll(); return; }
+      appendToken(txt);
     });
+  });
 
-    // Controls
-    btnClear.addEventListener('click', clearAll);
-    btnToggleSci.addEventListener('click', ()=>{
-      if(sciPanel.style.display === 'grid'){ sciPanel.style.display = 'none'; btnToggleSci.textContent = 'Scientific Mode'; }
-      else{ sciPanel.style.display = 'grid'; sciPanel.style.display = 'grid'; btnToggleSci.textContent = 'Standard Mode'; }
+  btnClear.addEventListener('click', clearAll);
+  btnToggleSci.addEventListener('click', ()=>{
+    if(sciPanel.style.display === 'grid'){ sciPanel.style.display = 'none'; btnToggleSci.textContent = 'Scientific Mode'; }
+    else{ sciPanel.style.display = 'grid'; btnToggleSci.textContent = 'Standard Mode'; }
+  });
+  btnTTS.addEventListener('click', ()=>{ const text = resEl.textContent || 'No result'; try{ speechSynthesis.speak(new SpeechSynthesisUtterance('Result is '+text)); }catch(e){} });
+
+  // speech recognition
+  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(SpeechRec){
+    const r = new SpeechRec();
+    r.lang = 'en-US'; r.interimResults = false; r.maxAlternatives = 1;
+    r.addEventListener('result', (ev)=>{
+      const spoken = ev.results[0][0].transcript.toLowerCase();
+      let mapped = spoken.replace(/plus/g,'+').replace(/minus/g,'-').replace(/times|multiplied by/g,'*').replace(/divided by|over/g,'/').replace(/point/g,'.').replace(/pi/g,'π').replace(/square root of /g,'sqrt(').replace(/square root /g,'sqrt(').replace(/sine /g,'sin(').replace(/cosine /g,'cos(').replace(/tangent /g,'tan(').replace(/power of /g,'^').replace(/percent/g,'%').replace(/to the power of /g,'^');
+      mapped = mapped.replace(/(what is|calculate|equals|equal|please|the)/g,'').trim();
+      const openFn = mapped.match(/(sin\(|cos\(|tan\(|sqrt\(|log\(|ln\()/g);
+      if(openFn && mapped.indexOf(')')===-1) mapped = mapped + ')';
+      expr = mapped;
+      exprEl.textContent = expr || '0';
+      updateResult();
     });
-    btnTTS.addEventListener('click', ()=>{
-      const text = resEl.textContent || 'No result';
-      try{ speechSynthesis.speak(new SpeechSynthesisUtterance('Result is ' + text)); }catch(e){}
-    });
+    btnSpeak.addEventListener('click', ()=>{ try{ r.start(); }catch(e){} });
+  } else { btnSpeak.disabled = true; btnSpeak.textContent = '🎤 not supported'; }
 
-    // Voice recognition: normalize spoken words
-    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if(SpeechRec){
-      const r = new SpeechRec();
-      r.lang = 'en-US';
-      r.interimResults = false;
-      r.maxAlternatives = 1;
-      r.addEventListener('result', (ev)=>{
-        const spoken = ev.results[0][0].transcript.toLowerCase();
-        // Map common words to tokens
-        let mapped = spoken
-          .replace(/plus/g,' + ')
-          .replace(/minus/g,' - ')
-          .replace(/times|multiplied by/g,' * ')
-          .replace(/divided by|over/g,' / ')
-          .replace(/point/g,'.')
-          .replace(/pi/g,'π')
-          .replace(/square root of /g,'sqrt(')
-          .replace(/square root /g,'sqrt(')
-          .replace(/sine /g,'sin(').replace(/cosine /g,'cos(').replace(/tangent /g,'tan(')
-          .replace(/power of /g,'^')
-          .replace(/percent/g,'%')
-          .replace(/to the power of /g,'^');
-        // remove filler words (basic)
-        mapped = mapped.replace(/(what is|calculate|equals|equal|please|the)/g,'');
-        // trim
-        mapped = mapped.trim();
-        // close open parentheses smartly (if a function used without ) )
-        const openFn = mapped.match(/(sin\(|cos\(|tan\(|sqrt\(|log\(|ln\()/g);
-        if(openFn){ mapped = mapped + (mapped.includes('(') && !mapped.includes(')') ? ')' : ''); }
-        expr = mapped;
-        exprEl.textContent = expr || '0';
-        updateResult();
-      });
-      btnSpeak.addEventListener('click', ()=>{ try{ r.start(); }catch(e){} });
-    } else {
-      btnSpeak.disabled = true;
-      btnSpeak.textContent = '🎤 not supported';
-    }
+  if('serviceWorker' in navigator){ navigator.serviceWorker.register('service-worker.js').catch(()=>{}); }
 
-    // register service worker for offline if available
-    if('serviceWorker' in navigator){
-      navigator.serviceWorker.register('service-worker.js').catch(()=>{ /* ignore */ });
-    }
-
-    // initial
-    setExpr('');
-  })();
-  </script>
+  // initialize
+  setExpr('');
+})();
+</script>
 </body>
 </html>
