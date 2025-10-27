@@ -1,11 +1,16 @@
-# Taobel Calculator v1.2 (Scientific, Voice, Blue Glow)
+# Taobel Calculator
 
-Taobel Calculator v1.2 — Scientific functions fixed (sqrt, log, ln, sin, cos, tan), voice input and TTS, blue glow theme, PWA-ready.
+Voice-enabled Progressive Web App (PWA) calculator built for Taobel.
 
-## How to deploy
-Upload files to your GitHub repo root and enable Pages (main branch, root).
+## How to deploy to GitHub Pages
 
-## Notes
-- Voice works in Chrome and browsers supporting SpeechRecognition.
-- If old cached version appears, clear site data or unregister service worker in browser.
-- This build intentionally omits currency converter for focus and performance.
+1. Upload all files in this folder to your repository root (e.g. `taobel-calculator`).
+2. In GitHub: Settings → Pages → Source → Deploy from a branch → `main` (root).
+3. Wait a minute, then open: `https://<your-username>.github.io/<repo-name>/`
+
+## Features
+
+- Voice input via Web Speech API
+- On-screen keypad for manual input
+- PWA installable & offline-capable (service worker)
+- Dark blue gradient theme

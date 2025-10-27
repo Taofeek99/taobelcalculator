@@ -8,158 +8,159 @@
   <meta name="theme-color" content="#002b55">
   <style>
     :root{
-      --bg1:#001936; --bg2:#003a6b; --card: rgba(255,255,255,0.04);
-      --accent: #39d0ff; --text:#e8f9ff;
+      --bg1:#002b55; --bg2:#005f99; --card:#071826; --accent:#00c6ff;
+      --glass: rgba(255,255,255,0.04);
     }
-    html,body{height:100%;margin:0;font-family:Inter,system-ui,Arial;}
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;}
     body{
-      background: radial-gradient(1200px 600px at 10% 10%, rgba(57,208,255,0.06), transparent),
-                  linear-gradient(135deg,var(--bg1),var(--bg2));
-      color:var(--text);
-      display:flex;align-items:center;justify-content:center;padding:20px;
+      background: linear-gradient(135deg,var(--bg1),var(--bg2));
+      display:flex;align-items:center;justify-content:center;padding:20px;color:#e6f7ff;
     }
-    .app{width:380px;max-width:96vw;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(0,0,0,0.06));
-         border-radius:14px;padding:16px;box-shadow:0 12px 30px rgba(2,8,23,0.6);backdrop-filter:blur(6px)}
-    header{display:flex;justify-content:space-between;align-items:center}
+    .app{
+      width:360px; max-width:95vw; background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.06));
+      border-radius:16px; padding:18px; box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+      backdrop-filter: blur(6px);
+    }
+    header{display:flex;align-items:center;gap:12px;}
+    .logo{width:52px;height:52px;border-radius:10px;background:linear-gradient(135deg,#00a9ff,#0066cc);display:flex;align-items:center;justify-content:center;font-weight:700;color:white;font-size:22px;}
     h1{margin:0;font-size:18px}
-    .display{background:#071a2a;border-radius:10px;padding:12px;margin-top:12px;min-height:68px}
-    #expr{font-size:18px;color:#cfeefd;word-break:break-all}
-    #res{font-size:26px;color:var(--accent);font-weight:700;margin-top:6px}
+    .display{margin-top:14px;background:var(--card);padding:14px;border-radius:10px;min-height:84px;display:flex;flex-direction:column;justify-content:center}
+    #spoken{font-size:13px;opacity:0.9}
+    #expression{font-size:20px;margin-top:6px;word-break:break-all}
+    #result{font-size:26px;margin-top:6px;font-weight:700;color:var(--accent)}
     .controls{display:flex;gap:8px;margin-top:12px}
-    .controls button{flex:1;padding:10px;border-radius:8px;border:none;background:var(--card);color:var(--text);cursor:pointer}
-    .controls button.primary{background:linear-gradient(90deg,#0077cc,#00c6ff);color:#012032;font-weight:600;box-shadow:0 6px 18px rgba(0,198,255,0.12)}
-    .keys{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
-    .key{padding:12px;border-radius:8px;background:rgba(255,255,255,0.03);text-align:center;cursor:pointer;user-select:none;box-shadow:inset 0 -2px 0 rgba(0,0,0,0.1)}
-    .key.op{background:linear-gradient(90deg,#003d66,#005f99);font-weight:600;color:white}
-    .sci-panel{display:none;margin-top:12px;grid-template-columns:repeat(4,1fr);gap:8px}
-    footer{margin-top:12px;font-size:12px;color:#cfeefd;text-align:center}
-    .small{font-size:12px;opacity:0.95}
+    button{flex:1;padding:10px;border-radius:10px;border:none;background:var(--glass);color:inherit;font-size:15px;cursor:pointer}
+    button.primary{background:linear-gradient(90deg,#0077cc,#00c6ff);color:#002036;font-weight:600}
+    .keypad{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
+    .key{padding:14px;border-radius:8px;background:rgba(255,255,255,0.05);text-align:center;font-size:18px;cursor:pointer;user-select:none}
+    .key.operator{background:linear-gradient(90deg,#003d66,#005f99);color:white;font-weight:600}
+    footer{margin-top:10px;font-size:12px;opacity:0.8;text-align:center}
   </style>
 </head>
 <body>
   <div class="app" role="application" aria-label="Taobel Calculator">
     <header>
+      <div class="logo">T</div>
       <div>
         <h1>Taobel Calculator</h1>
-        <div class="small">Standard • Scientific (toggle)</div>
+        <div style="font-size:12px;opacity:0.9">Voice + Touch calculator (PWA)</div>
       </div>
-      <div class="small">Taobel</div>
     </header>
 
     <div class="display" aria-live="polite">
-      <div id="expr">0</div>
-      <div id="res"></div>
+      <div id="spoken">Say: "12 plus 8 divided by 4" or tap keys below</div>
+      <div id="expression"></div>
+      <div id="result"></div>
     </div>
 
     <div class="controls">
-      <button id="btnSpeak" class="primary">🎤 Speak</button>
-      <button id="btnToggleSci">Scientific Mode</button>
-      <button id="btnTTS">🔊 Read</button>
-      <button id="btnClear">C</button>
+      <button id="startBtn" class="primary">🎤 Speak</button>
+      <button id="clearBtn">Clear</button>
     </div>
 
-    <div class="keys" id="keys">
-      <div class="key">7</div><div class="key">8</div><div class="key">9</div><div class="key op">/</div>
-      <div class="key">4</div><div class="key">5</div><div class="key">6</div><div class="key op">*</div>
-      <div class="key">1</div><div class="key">2</div><div class="key">3</div><div class="key op">-</div>
-      <div class="key">0</div><div class="key">.</div><div class="key op">=</div><div class="key op">+</div>
+    <div class="keypad" role="group" aria-label="Calculator keypad">
+      <div class="key">7</div><div class="key">8</div><div class="key">9</div><div class="key operator">/</div>
+      <div class="key">4</div><div class="key">5</div><div class="key">6</div><div class="key operator">*</div>
+      <div class="key">1</div><div class="key">2</div><div class="key">3</div><div class="key operator">-</div>
+      <div class="key">0</div><div class="key">.</div><div class="key operator">=</div><div class="key operator">+</div>
     </div>
 
-    <div class="sci-panel" id="sciPanel" aria-hidden="true">
-      <div class="key op">sin(</div><div class="key op">cos(</div><div class="key op">tan(</div><div class="key op">log(</div>
-      <div class="key op">ln(</div><div class="key op">sqrt(</div><div class="key op">^</div><div class="key op">π</div>
-      <div class="key op">e</div><div class="key op">x²</div><div class="key op">x³</div><div class="key op">%</div>
-    </div>
-
-    <footer>Offline • Blue Glow • Taobel</footer>
+    <footer>Installable PWA — Add to Home Screen</footer>
   </div>
 
 <script>
-(function(){
-  const exprEl = document.getElementById('expr');
-  const resEl  = document.getElementById('res');
-  const sciPanel = document.getElementById('sciPanel');
-  const btnSpeak = document.getElementById('btnSpeak');
-  const btnToggleSci = document.getElementById('btnToggleSci');
-  const btnTTS = document.getElementById('btnTTS');
-  const btnClear = document.getElementById('btnClear');
+/* Speech recognition with fallback */
+const startBtn = document.getElementById('startBtn');
+const clearBtn = document.getElementById('clearBtn');
+const spokenEl = document.getElementById('spoken');
+const exprEl = document.getElementById('expression');
+const resultEl = document.getElementById('result');
 
-  let expr = '';
-  let lastAnswer = '';
+let currentExpression = '';
 
-  function setExpr(v){ expr = v; exprEl.textContent = expr || '0'; updateResult(); }
-  function appendToken(t){ if(expr==='0') expr = t; else expr += t; exprEl.textContent = expr; updateResult(); }
-  function clearAll(){ expr=''; setExpr(''); resEl.textContent=''; lastAnswer=''; }
-
-  function safeEval(s){
-    if(!s || s.trim()==='') return null;
-    try{
-      let t = String(s)
-        .replace(/π/g, String(Math.PI))
-        .replace(/\be\b/g, String(Math.E));
-      t = t.replace(/sqrt\(/g, 'Math.sqrt(')
-           .replace(/\bln\(/g, 'Math.log(')
-           .replace(/\blog\(/g, 'Math.log10(')
-           .replace(/\bsin\(/g, 'Math.sin(').replace(/\bcos\(/g,'Math.cos(').replace(/\btan\(/g,'Math.tan(');
-      t = t.replace(/(\d+|\))x²/g, function(m){ return m.replace('x²','**2'); });
-      t = t.replace(/(\d+|\))x³/g, function(m){ return m.replace('x³','**3'); });
-      t = t.replace(/\^/g, '**');
-      t = t.replace(/(\d+(?:\.\d+)?)%/g, '($1/100)');
-      t = t.replace(/[^0-9+\-*/().,%Mathpinegslctanobxr**\s]/g, '');
-      const fn = new Function('return ('+t+')');
-      const v = fn();
-      if(typeof v === 'number' && isFinite(v)){
-        return Math.round((v + Number.EPSILON) * 1e12) / 1e12;
-      }
-      return null;
-    }catch(e){ return null; }
+function updateDisplay(){
+  exprEl.textContent = currentExpression;
+  try {
+    const res = eval(currentExpression || '0');
+    if (res !== undefined) resultEl.textContent = res;
+  } catch(e){
+    resultEl.textContent = '';
   }
+}
 
-  function updateResult(){
-    const v = safeEval(expr);
-    if(v !== null && v !== undefined){ resEl.textContent = v; lastAnswer = String(v); } else resEl.textContent = '';
-  }
+clearBtn.addEventListener('click', ()=>{
+  currentExpression = '';
+  spokenEl.textContent = 'Cleared. You can speak or tap keys.';
+  updateDisplay();
+});
 
-  // key handlers
-  document.querySelectorAll('.key').forEach(k=>{
-    k.addEventListener('click', ()=>{
-      const txt = k.textContent.trim();
-      if(txt === '='){ const v = safeEval(expr); if(v!==null){ expr = String(v); exprEl.textContent = expr; resEl.textContent = v; lastAnswer = String(v);} return; }
-      if(txt === 'C'){ clearAll(); return; }
-      appendToken(txt);
-    });
+document.querySelectorAll('.key').forEach(k=>{
+  k.addEventListener('click', ()=> {
+    const v = k.textContent.trim();
+    if (v === '=') {
+      // do nothing special, eval shown already
+      spokenEl.textContent = 'Calculated by touchscreen';
+      try{ currentExpression = String(eval(currentExpression)); }catch(e){}
+      updateDisplay();
+      return;
+    }
+    currentExpression += v;
+    updateDisplay();
+  });
+});
+
+// Speech recognition
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+function normalizeSpokenToExpr(text){
+  return text.toLowerCase()
+    .replace(/plus/g,'+')
+    .replace(/minus/g,'-')
+    .replace(/times|x|multiplied by/g,'*')
+    .replace(/divided by|over/g,'/')
+    .replace(/into/g,'*')
+    .replace(/by/g,'/')
+    .replace(/[^0-9+\-*/(). ]/g,'') // remove stray words
+    ;
+}
+
+if (!SpeechRecognition) {
+  startBtn.disabled = true;
+  startBtn.textContent = 'Speech not supported';
+} else {
+  const recognition = new SpeechRecognition();
+  recognition.lang = 'en-US';
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+
+  startBtn.addEventListener('click', ()=> {
+    recognition.start();
+    startBtn.textContent = 'Listening...';
   });
 
-  btnClear.addEventListener('click', clearAll);
-  btnToggleSci.addEventListener('click', ()=>{
-    if(sciPanel.style.display === 'grid'){ sciPanel.style.display = 'none'; btnToggleSci.textContent = 'Scientific Mode'; }
-    else{ sciPanel.style.display = 'grid'; btnToggleSci.textContent = 'Standard Mode'; }
+  recognition.addEventListener('result', (ev)=>{
+    const text = ev.results[0][0].transcript;
+    spokenEl.textContent = 'You said: "' + text + '"';
+    const expr = normalizeSpokenToExpr(text);
+    currentExpression = expr;
+    updateDisplay();
   });
-  btnTTS.addEventListener('click', ()=>{ const text = resEl.textContent || 'No result'; try{ speechSynthesis.speak(new SpeechSynthesisUtterance('Result is '+text)); }catch(e){} });
 
-  // speech recognition
-  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if(SpeechRec){
-    const r = new SpeechRec();
-    r.lang = 'en-US'; r.interimResults = false; r.maxAlternatives = 1;
-    r.addEventListener('result', (ev)=>{
-      const spoken = ev.results[0][0].transcript.toLowerCase();
-      let mapped = spoken.replace(/plus/g,'+').replace(/minus/g,'-').replace(/times|multiplied by/g,'*').replace(/divided by|over/g,'/').replace(/point/g,'.').replace(/pi/g,'π').replace(/square root of /g,'sqrt(').replace(/square root /g,'sqrt(').replace(/sine /g,'sin(').replace(/cosine /g,'cos(').replace(/tangent /g,'tan(').replace(/power of /g,'^').replace(/percent/g,'%').replace(/to the power of /g,'^');
-      mapped = mapped.replace(/(what is|calculate|equals|equal|please|the)/g,'').trim();
-      const openFn = mapped.match(/(sin\(|cos\(|tan\(|sqrt\(|log\(|ln\()/g);
-      if(openFn && mapped.indexOf(')')===-1) mapped = mapped + ')';
-      expr = mapped;
-      exprEl.textContent = expr || '0';
-      updateResult();
-    });
-    btnSpeak.addEventListener('click', ()=>{ try{ r.start(); }catch(e){} });
-  } else { btnSpeak.disabled = true; btnSpeak.textContent = '🎤 not supported'; }
+  recognition.addEventListener('end', ()=>{
+    startBtn.textContent = '🎤 Speak';
+  });
 
-  if('serviceWorker' in navigator){ navigator.serviceWorker.register('service-worker.js').catch(()=>{}); }
+  recognition.addEventListener('error', (e)=>{
+    spokenEl.textContent = 'Speech error: ' + e.error;
+    startBtn.textContent = '🎤 Speak';
+  });
+}
 
-  // initialize
-  setExpr('');
-})();
+// PWA service worker registration (will be cached)
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('service-worker.js')
+    .then(()=>console.log('Service worker registered'))
+    .catch(()=>console.log('Service worker failed'));
+}
 </script>
 </body>
 </html>
