@@ -1,74 +1,63 @@
-function appendValue(val) {
-  document.getElementById("display").value += val;
-}
+<script>
+// ============================
+// ✅ Taobel Scientific Calculator (No safeEval)
+// ============================
 
-function clearDisplay() {
-  document.getElementById("display").value = "";
-}
+const display = document.getElementById("display");
+const buttons = document.querySelectorAll(".key");
 
-function calculate() {
-  let expression = document.getElementById("display").value;
+// Handle button clicks
+buttons.forEach(button => {
+  button.addEventListener("click", () => {
+    const value = button.textContent.trim();
 
-  expression = expression.replace(/sin\(/g, "Math.sin(");
-  expression = expression.replace(/cos\(/g, "Math.cos(");
-  expression = expression.replace(/tan\(/g, "Math.tan(");
-  expression = expression.replace(/log\(/g, "Math.log10(");
-  expression = expression.replace(/ln\(/g, "Math.log(");
-  expression = expression.replace(/√\(/g, "Math.sqrt(");
-  expression = expression.replace(/\^/g, "**");
+    if (value === "C") {
+      display.value = "";
+    } 
+    else if (value === "DEL") {
+      display.value = display.value.slice(0, -1);
+    } 
+    else if (value === "=") {
+      calculateResult();
+    } 
+    else {
+      display.value += value;
+    }
+  });
+});
+
+// ✅ Calculation function (no eval directly)
+function calculateResult() {
+  let expr = display.value;
 
   try {
-    const result = eval(expression);
-    document.getElementById("display").value = result;
-    speak("The answer is " + result);
-  } catch {
-    document.getElementById("display").value = "Error";
-    speak("There was an error in your calculation.");
+    // Convert symbols to JavaScript math
+    expr = expr
+      .replace(/×/g, "*")
+      .replace(/÷/g, "/")
+      .replace(/π/g, "Math.PI")
+      .replace(/√/g, "Math.sqrt")
+      .replace(/sin/g, "Math.sin(Math.PI/180*")
+      .replace(/cos/g, "Math.cos(Math.PI/180*")
+      .replace(/tan/g, "Math.tan(Math.PI/180*")
+      .replace(/log/g, "Math.log10")
+      .replace(/ln/g, "Math.log")
+      .replace(/\^/g, "**");
+
+    // Fix missing parentheses after trig functions
+    const openCount = (expr.match(/\(/g) || []).length;
+    const closeCount = (expr.match(/\)/g) || []).length;
+    if (openCount > closeCount) {
+      expr += ")".repeat(openCount - closeCount);
+    }
+
+    const result = Function('"use strict"; return (' + expr + ")")();
+    display.value = isNaN(result) ? "Error" : Math.round(result * 1e12) / 1e12;
+  } catch (e) {
+    display.value = "Error";
   }
 }
-
-function speak(text) {
-  if ('speechSynthesis' in window) {
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "en-US";
-    utterance.rate = 1;
-    utterance.pitch = 1;
-    window.speechSynthesis.speak(utterance);
-  }
-}
-
-function startListening() {
-  if (!('webkitSpeechRecognition' in window)) {
-    alert("Sorry, your browser doesn't support voice input.");
-    return;
-  }
-
-  const recognition = new webkitSpeechRecognition();
-  recognition.lang = "en-US";
-  recognition.interimResults = false;
-  recognition.continuous = false;
-
-  recognition.onstart = () => {
-    document.getElementById("mic").classList.add("listening");
-    speak("Listening...");
-  };
-
-  recognition.onresult = (event) => {
-    const voiceText = event.results[0][0].transcript;
-    document.getElementById("display").value = voiceText;
-    speak("Calculating...");
-    setTimeout(() => calculate(), 500);
-  };
-
-  recognition.onerror = (event) => {
-    alert("Voice recognition error: " + event.error);
-    speak("Sorry, I did not catch that. Please try again.");
-  };
-
-  recognition.onend = () => {
-    document.getElementById("mic").classList.remove("listening");
-  };
-
+</script>
   recognition.start();
 }
 
