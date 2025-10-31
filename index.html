@@ -155,55 +155,59 @@
     btnSpeak.addEventListener('click', ()=>{ try{ r.start(); }catch(e){} });
   } else { btnSpeak.disabled = true; btnSpeak.textContent = '🎤 not supported'; }
 
-  if('serviceWorker' in navigator){ navigator.serviceWorker.register('service-worker.js').catch(()=>{}); }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Taobel Voice Calculator</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="calculator">
+    <h2>🧮 Taobel Voice Calculator</h2>
+    <input type="text" id="display" readonly />
 
-  // initialize
-  setExpr('');
-})();
-</script>
-  <script>
-// ✅ Voice + Scientific Calculator Logic
-const display = document.getElementById("display");
-const buttons = document.querySelectorAll(".btn");
+    <div class="buttons">
+      <!-- Row 1 -->
+      <button onclick="appendValue('7')">7</button>
+      <button onclick="appendValue('8')">8</button>
+      <button onclick="appendValue('9')">9</button>
+      <button onclick="appendValue('/')">÷</button>
 
-buttons.forEach(btn => {
-  btn.addEventListener("click", () => {
-    const val = btn.textContent;
-    if (val === "C") display.value = "";
-    else if (val === "=") {
-      try {
-        display.value = eval(display.value.replace("√", "Math.sqrt")
-                                           .replace("sin", "Math.sin")
-                                           .replace("cos", "Math.cos")
-                                           .replace("tan", "Math.tan")
-                                           .replace("π", "Math.PI"));
-      } catch {
-        display.value = "Error";
-      }
-    } else display.value += val;
-  });
-});
+      <!-- Row 2 -->
+      <button onclick="appendValue('4')">4</button>
+      <button onclick="appendValue('5')">5</button>
+      <button onclick="appendValue('6')">6</button>
+      <button onclick="appendValue('*')">×</button>
 
-// ✅ Voice Input
-const mic = document.getElementById("mic");
-if (mic) {
-  mic.addEventListener("click", () => {
-    if (!("webkitSpeechRecognition" in window)) {
-      alert("Sorry, your browser doesn't support voice input.");
-      return;
-    }
-    const recognition = new webkitSpeechRecognition();
-    recognition.lang = "en-US";
-    recognition.start();
-    recognition.onresult = function(event) {
-      const speech = event.results[0][0].transcript;
-      display.value = speech;
-    };
-    recognition.onerror = function() {
-      alert("Voice recognition error. Try again.");
-    };
-  });
-}
-</script>
+      <!-- Row 3 -->
+      <button onclick="appendValue('1')">1</button>
+      <button onclick="appendValue('2')">2</button>
+      <button onclick="appendValue('3')">3</button>
+      <button onclick="appendValue('-')">−</button>
+
+      <!-- Row 4 -->
+      <button onclick="appendValue('0')">0</button>
+      <button onclick="appendValue('.')">.</button>
+      <button onclick="calculate()">=</button>
+      <button onclick="appendValue('+')">+</button>
+    </div>
+
+    <div class="sci-buttons">
+      <button onclick="appendValue('sin(')">sin</button>
+      <button onclick="appendValue('cos(')">cos</button>
+      <button onclick="appendValue('tan(')">tan</button>
+      <button onclick="appendValue('log(')">log</button>
+      <button onclick="appendValue('ln(')">ln</button>
+      <button onclick="appendValue('√(')">√</button>
+      <button onclick="appendValue('^')">xʸ</button>
+      <button onclick="clearDisplay()">C</button>
+    </div>
+
+    <button id="mic" class="mic">🎤 Tap to Speak</button>
+  </div>
+
+  <script src="script.js"></script>
 </body>
 </html>
