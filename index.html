@@ -161,5 +161,49 @@
   setExpr('');
 })();
 </script>
+  <script>
+// ✅ Voice + Scientific Calculator Logic
+const display = document.getElementById("display");
+const buttons = document.querySelectorAll(".btn");
+
+buttons.forEach(btn => {
+  btn.addEventListener("click", () => {
+    const val = btn.textContent;
+    if (val === "C") display.value = "";
+    else if (val === "=") {
+      try {
+        display.value = eval(display.value.replace("√", "Math.sqrt")
+                                           .replace("sin", "Math.sin")
+                                           .replace("cos", "Math.cos")
+                                           .replace("tan", "Math.tan")
+                                           .replace("π", "Math.PI"));
+      } catch {
+        display.value = "Error";
+      }
+    } else display.value += val;
+  });
+});
+
+// ✅ Voice Input
+const mic = document.getElementById("mic");
+if (mic) {
+  mic.addEventListener("click", () => {
+    if (!("webkitSpeechRecognition" in window)) {
+      alert("Sorry, your browser doesn't support voice input.");
+      return;
+    }
+    const recognition = new webkitSpeechRecognition();
+    recognition.lang = "en-US";
+    recognition.start();
+    recognition.onresult = function(event) {
+      const speech = event.results[0][0].transcript;
+      display.value = speech;
+    };
+    recognition.onerror = function() {
+      alert("Voice recognition error. Try again.");
+    };
+  });
+}
+</script>
 </body>
 </html>
