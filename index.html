@@ -167,5 +167,54 @@
   setExpr('');
 })();
 </script>
+  <script>
+// ============================
+// ✅ Taobel Scientific Calculator (No safeEval, clean trig)
+// ============================
+
+const display = document.getElementById("display");
+const buttons = document.querySelectorAll(".key");
+
+// handle key presses
+buttons.forEach(btn => {
+  btn.addEventListener("click", () => {
+    const val = btn.textContent.trim();
+
+    if (val === "C") return display.value = "";
+    if (val === "DEL") return display.value = display.value.slice(0, -1);
+    if (val === "=") return calculate();
+
+    display.value += val;
+  });
+});
+
+function calculate() {
+  try {
+    let expr = display.value;
+
+    expr = expr
+      .replace(/×/g, "*")
+      .replace(/÷/g, "/")
+      .replace(/π/g, "Math.PI")
+      .replace(/√/g, "Math.sqrt")
+      .replace(/sin/g, "Math.sin(Math.PI/180*")
+      .replace(/cos/g, "Math.cos(Math.PI/180*")
+      .replace(/tan/g, "Math.tan(Math.PI/180*")
+      .replace(/log/g, "Math.log10")
+      .replace(/ln/g, "Math.log")
+      .replace(/\^/g, "**");
+
+    // balance parentheses if user forgets to close
+    const open = (expr.match(/\(/g) || []).length;
+    const close = (expr.match(/\)/g) || []).length;
+    if (open > close) expr += ")".repeat(open - close);
+
+    const result = Function('"use strict";return(' + expr + ')')();
+    display.value = isNaN(result) ? "Error" : Math.round(result * 1e12) / 1e12;
+  } catch {
+    display.value = "Error";
+  }
+}
+</script>
 </body>
 </html>
