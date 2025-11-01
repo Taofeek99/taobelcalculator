@@ -168,92 +168,54 @@
 })();
 </script>
   <script>
+<script>
 // ============================
-// ✅ Taobel Voice Calculator – Full Logic
+// ✅ Taobel Scientific Calculator (No safeEval, clean trig)
 // ============================
 
-<!-- ✅ Corrected Scientific + Voice Logic -->
-  <script>
-(function(){
-  // Helper to safely evaluate math expressions
-  function safeEval(expr){
-    try{
-      const fn = new Function('return (' + expr
-        .replace(/√/g, 'Math.sqrt')
-        .replace(/π/g, 'Math.PI')
-        .replace(/sin\(/g, 'Math.sin(Math.PI/180*')
-        .replace(/cos\(/g, 'Math.cos(Math.PI/180*')
-        .replace(/tan\(/g, 'Math.tan(Math.PI/180*')
-        .replace(/log\(/g, 'Math.log10(')
-        .replace(/ln\(/g, 'Math.log(')
-        .replace(/\^/g, '**')
-      + ')');
-      const v = fn();
-      if(typeof v === 'number' && isFinite(v)){
-        return Math.round((v + Number.EPSILON) * 1e12) / 1e12;
-      }
-      return null;
-    }catch(e){ return null; }
-  }
+const display = document.getElementById("display");
+const buttons = document.querySelectorAll(".key");
 
-  function updateResult(){
-    const v = safeEval(expr);
-    if(v !== null && v !== undefined){ resEl.textContent = v; lastAnswer = String(v); } 
-    else resEl.textContent = '';
-  }
+// handle key presses
+buttons.forEach(btn => {
+  btn.addEventListener("click", () => {
+    const val = btn.textContent.trim();
 
-  // Key handlers
-  document.querySelectorAll('.key').forEach(k=>{
-    k.addEventListener('click', ()=>{
-      const txt = k.textContent.trim();
-      if(txt === '='){ 
-        const v = safeEval(expr); 
-        if(v!==null){ 
-          expr = String(v); 
-          exprEl.textContent = expr; 
-          resEl.textContent = v; 
-          lastAnswer = String(v);
-        } 
-        return; 
-      }
-      if(txt === 'C'){ clearAll(); return; }
-      appendToken(txt);
-    });
+    if (val === "C") return display.value = "";
+    if (val === "DEL") return display.value = display.value.slice(0, -1);
+    if (val === "=") return calculate();
+
+    display.value += val;
   });
+});
 
-  // Voice Input
-  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if(SpeechRec){
-    const r = new SpeechRec();
-    r.lang = 'en-US'; r.interimResults = false; r.maxAlternatives = 1;
-    r.addEventListener('result', (ev)=>{
-      const spoken = ev.results[0][0].transcript.toLowerCase();
-      let mapped = spoken.replace(/plus/g,'+')
-                         .replace(/minus/g,'-')
-                         .replace(/times|multiplied by/g,'*')
-                         .replace(/divided by|over/g,'/')
-                         .replace(/point/g,'.')
-                         .replace(/pi/g,'π')
-                         .replace(/square root of /g,'√(')
-                         .replace(/sine /g,'sin(')
-                         .replace(/cosine /g,'cos(')
-                         .replace(/tangent /g,'tan(')
-                         .replace(/power of /g,'^')
-                         .replace(/percent/g,'%');
-      mapped = mapped.replace(/(what is|calculate|equals|equal|please|the)/g,'').trim();
-      const openFn = mapped.match(/(sin\(|cos\(|tan\(|√\(|log\(|ln\()/g);
-      if(openFn && mapped.indexOf(')')===-1) mapped = mapped + ')';
-      expr = mapped;
-      exprEl.textContent = expr || '0';
-      updateResult();
-    });
-    btnSpeak.addEventListener('click', ()=>{ try{ r.start(); }catch(e){} });
-  } else { btnSpeak.disabled = true; btnSpeak.textContent = '🎤 not supported'; }
+function calculate() {
+  try {
+    let expr = display.value;
 
-  if('serviceWorker' in navigator){ navigator.serviceWorker.register('service-worker.js').catch(()=>{}); }
+    expr = expr
+      .replace(/×/g, "*")
+      .replace(/÷/g, "/")
+      .replace(/π/g, "Math.PI")
+      .replace(/√/g, "Math.sqrt")
+      .replace(/sin/g, "Math.sin(Math.PI/180*")
+      .replace(/cos/g, "Math.cos(Math.PI/180*")
+      .replace(/tan/g, "Math.tan(Math.PI/180*")
+      .replace(/log/g, "Math.log10")
+      .replace(/ln/g, "Math.log")
+      .replace(/\^/g, "**");
 
-  setExpr('');
-})();
+    // balance parentheses if user forgets to close
+    const open = (expr.match(/\(/g) || []).length;
+    const close = (expr.match(/\)/g) || []).length;
+    if (open > close) expr += ")".repeat(open - close);
+
+    const result = Function('"use strict";return(' + expr + ')')();
+    display.value = isNaN(result) ? "Error" : Math.round(result * 1e12) / 1e12;
+  } catch {
+    display.value = "Error";
+  }
+}
 </script>
 </body>
 </html>
