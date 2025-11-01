@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Taobel Calculator</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#002b55">
+  <style>
+    :root{
+      --bg1:#001936; --bg2:#003a6b; --card: rgba(255,255,255,0.04);
+      --accent: #39d0ff; --text:#e8f9ff;
+    }
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,Arial;}
+    body{
+      background: radial-gradient(1200px 600px at 10% 10%, rgba(57,208,255,0.06), transparent),
+                  linear-gradient(135deg,var(--bg1),var(--bg2));
+      color:var(--text);
+      display:flex;align-items:center;justify-content:center;padding:20px;
+    }
+    .app{width:380px;max-width:96vw;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(0,0,0,0.06));
+         border-radius:14px;padding:16px;box-shadow:0 12px 30px rgba(2,8,23,0.6);backdrop-filter:blur(6px)}
+    header{display:flex;justify-content:space-between;align-items:center}
+    h1{margin:0;font-size:18px}
+    .display{background:#071a2a;border-radius:10px;padding:12px;margin-top:12px;min-height:68px}
+    #expr{font-size:18px;color:#cfeefd;word-break:break-all}
+    #res{font-size:26px;color:var(--accent);font-weight:700;margin-top:6px}
+    .controls{display:flex;gap:8px;margin-top:12px}
+    .controls button{flex:1;padding:10px;border-radius:8px;border:none;background:var(--card);color:var(--text);cursor:pointer}
+    .controls button.primary{background:linear-gradient(90deg,#0077cc,#00c6ff);color:#012032;font-weight:600;box-shadow:0 6px 18px rgba(0,198,255,0.12)}
+    .keys{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
+    .key{padding:12px;border-radius:8px;background:rgba(255,255,255,0.03);text-align:center;cursor:pointer;user-select:none;box-shadow:inset 0 -2px 0 rgba(0,0,0,0.1)}
+    .key.op{background:linear-gradient(90deg,#003d66,#005f99);font-weight:600;color:white}
+    .sci-panel{display:none;margin-top:12px;grid-template-columns:repeat(4,1fr);gap:8px}
+    footer{margin-top:12px;font-size:12px;color:#cfeefd;text-align:center}
+    .small{font-size:12px;opacity:0.95}
+  </style>
+</head>
+<body>
+  <div class="app" role="application" aria-label="Taobel Calculator">
+    <header>
+      <div>
+        <h1>Taobel Calculator</h1>
+        <div class="small">Standard • Scientific (toggle)</div>
+      </div>
+      <div class="small">Taobel</div>
+    </header>
+
+    <div class="display" aria-live="polite">
+      <div id="expr">0</div>
+      <div id="res"></div>
+    </div>
+
+    <div class="controls">
+      <button id="btnSpeak" class="primary">🎤 Speak</button>
+      <button id="btnToggleSci">Scientific Mode</button>
+      <button id="btnTTS">🔊 Read</button>
+      <button id="btnClear">C</button>
+    </div>
+
+    <div class="keys" id="keys">
+      <div class="key">7</div><div class="key">8</div><div class="key">9</div><div class="key op">/</div>
+      <div class="key">4</div><div class="key">5</div><div class="key">6</div><div class="key op">*</div>
+      <div class="key">1</div><div class="key">2</div><div class="key">3</div><div class="key op">-</div>
+      <div class="key">0</div><div class="key">.</div><div class="key op">=</div><div class="key op">+</div>
+    </div>
+
+    <div class="sci-panel" id="sciPanel" aria-hidden="true">
+      <div class="key op">sin(</div><div class="key op">cos(</div><div class="key op">tan(</div><div class="key op">log(</div>
+      <div class="key op">ln(</div><div class="key op">sqrt(</div><div class="key op">^</div><div class="key op">π</div>
+      <div class="key op">e</div><div class="key op">x²</div><div class="key op">x³</div><div class="key op">%</div>
+    </div>
+
+    <footer>Offline • Blue Glow • Taobel</footer>
+  </div>
+
+<script>
+(function(){
+  const exprEl = document.getElementById('expr');
+  const resEl  = document.getElementById('res');
+  const sciPanel = document.getElementById('sciPanel');
+  const btnSpeak = document.getElementById('btnSpeak');
+  const btnToggleSci = document.getElementById('btnToggleSci');
+  const btnTTS = document.getElementById('btnTTS');
+  const btnClear = document.getElementById('btnClear');
+
+  let expr = '';
+  let lastAnswer = '';
+
+  function setExpr(v){ expr = v; exprEl.textContent = expr || '0'; updateResult(); }
+  function appendToken(t){ if(expr==='0') expr = t; else expr += t; exprEl.textContent = expr; updateResult(); }
+  function clearAll(){ expr=''; setExpr(''); resEl.textContent=''; lastAnswer=''; }
+
+  function safeEval(s){
+    if(!s || s.trim()==='') return null;
+    try{
+      let t = String(s)
+        .replace(/π/g, String(Math.PI))
+        .replace(/\be\b/g, String(Math.E));
+      t = t.replace(/sqrt\(/g, 'Math.sqrt(')
+           .replace(/\bln\(/g, 'Math.log(')
+           .replace(/\blog\(/g, 'Math.log10(')
+           .replace(/\bsin\(/g, 'Math.sin(').replace(/\bcos\(/g,'Math.cos(').replace(/\btan\(/g,'Math.tan(');
+      t = t.replace(/(\d+|\))x²/g, function(m){ return m.replace('x²','**2'); });
+      t = t.replace(/(\d+|\))x³/g, function(m){ return m.replace('x³','**3'); });
+      t = t.replace(/\^/g, '**');
+      t = t.replace(/(\d+(?:\.\d+)?)%/g, '($1/100)');
+      t = t.replace(/[^0-9+\-*/().,%Mathpinegslctanobxr**\s]/g, '');
+      const fn = new Function('return ('+t+')');
+      const v = fn();
+      if(typeof v === 'number' && isFinite(v)){
+        return Math.round((v + Number.EPSILON) * 1e12) / 1e12;
+      }
+      return null;
+    }catch(e){ return null; }
+  }
+
+  function updateResult(){
+    const v = safeEval(expr);
+    if(v !== null && v !== undefined){ resEl.textContent = v; lastAnswer = String(v); } else resEl.textContent = '';
+  }
+
+  // key handlers
+  document.querySelectorAll('.key').forEach(k=>{
+    k.addEventListener('click', ()=>{
+      const txt = k.textContent.trim();
+      if(txt === '='){ const v = safeEval(expr); if(v!==null){ expr = String(v); exprEl.textContent = expr; resEl.textContent = v; lastAnswer = String(v);} return; }
+      if(txt === 'C'){ clearAll(); return; }
+      appendToken(txt);
+    });
+  });
+
+  btnClear.addEventListener('click', clearAll);
+  btnToggleSci.addEventListener('click', ()=>{
+    if(sciPanel.style.display === 'grid'){ sciPanel.style.display = 'none'; btnToggleSci.textContent = 'Scientific Mode'; }
+    else{ sciPanel.style.display = 'grid'; btnToggleSci.textContent = 'Standard Mode'; }
+  });
+  btnTTS.addEventListener('click', ()=>{ const text = resEl.textContent || 'No result'; try{ speechSynthesis.speak(new SpeechSynthesisUtterance('Result is '+text)); }catch(e){} });
+
+  // speech recognition
+  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(SpeechRec){
+    const r = new SpeechRec();
+    r.lang = 'en-US'; r.interimResults = false; r.maxAlternatives = 1;
+    r.addEventListener('result', (ev)=>{
+      const spoken = ev.results[0][0].transcript.toLowerCase();
+      let mapped = spoken.replace(/plus/g,'+').replace(/minus/g,'-').replace(/times|multiplied by/g,'*').replace(/divided by|over/g,'/').replace(/point/g,'.').replace(/pi/g,'π').replace(/square root of /g,'sqrt(').replace(/square root /g,'sqrt(').replace(/sine /g,'sin(').replace(/cosine /g,'cos(').replace(/tangent /g,'tan(').replace(/power of /g,'^').replace(/percent/g,'%').replace(/to the power of /g,'^');
+      mapped = mapped.replace(/(what is|calculate|equals|equal|please|the)/g,'').trim();
+      const openFn = mapped.match(/(sin\(|cos\(|tan\(|sqrt\(|log\(|ln\()/g);
+      if(openFn && mapped.indexOf(')')===-1) mapped = mapped + ')';
+      expr = mapped;
+      exprEl.textContent = expr || '0';
+      updateResult();
+    });
+    btnSpeak.addEventListener('click', ()=>{ try{ r.start(); }catch(e){} });
+  } else { btnSpeak.disabled = true; btnSpeak.textContent = '🎤 not supported'; }
+
+  if('serviceWorker' in navigator){ navigator.serviceWorker.register('service-worker.js').catch(()=>{}); }
+
+  // initialize
+  setExpr('');
+})();
+</script>
+</body>
+</html>
